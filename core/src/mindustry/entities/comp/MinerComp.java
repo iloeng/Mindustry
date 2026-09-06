@@ -1,14 +1,10 @@
 package mindustry.entities.comp;
 
-import arc.*;
-import arc.graphics.*;
-import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.util.*;
 import mindustry.annotations.Annotations.*;
 import mindustry.content.*;
 import mindustry.gen.*;
-import mindustry.graphics.*;
 import mindustry.input.*;
 import mindustry.type.*;
 import mindustry.world.*;
@@ -91,8 +87,8 @@ abstract class MinerComp implements Itemsc, Posc, Teamc, Rotc, Drawc{
         }else if(mining() && item != null){
             mineTimer += Time.delta * type.mineSpeed * state.rules.unitMineSpeed(team());
 
-            if(Mathf.chance(0.06 * Time.delta)){
-                Fx.pulverizeSmall.at(mineTile.worldx() + Mathf.range(tilesize / 2f), mineTile.worldy() + Mathf.range(tilesize / 2f), 0f, item.color);
+            if(Mathf.chance(0.07 * Time.delta)){
+                Fx.unitMine.at(mineTile.worldx() + Mathf.range(tilesize / 2f), mineTile.worldy() + Mathf.range(tilesize / 2f), 0f, item.color);
             }
 
             if(mineTimer >= 50f + (type.mineHardnessScaling ? item.hardness*15f : 15f)){
