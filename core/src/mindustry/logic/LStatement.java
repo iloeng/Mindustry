@@ -83,7 +83,8 @@ public abstract class LStatement{
         tooltip(label, text);
     }
 
-    protected String sanitize(String value){
+    /** Sanitizes variable input strings from text fields into values that will not break logic parsing. */
+    public static String sanitize(String value){
         if(value.length() == 0){
             return "";
         }else if(value.length() == 1){
@@ -94,12 +95,14 @@ public abstract class LStatement{
             StringBuilder res = new StringBuilder(value.length());
             if(value.charAt(0) == '"' && value.charAt(value.length() - 1) == '"'){
                 res.append('\"');
-                //strip out extra quotes
+                //escape characters that would otherwise break out of the string or corrupt it
                 for(int i = 1; i < value.length() - 1; i++){
-                    if(value.charAt(i) == '"'){
-                        res.append('\'');
-                    }else{
-                        res.append(value.charAt(i));
+                    char c = value.charAt(i);
+                    switch(c){
+                        case '"' -> res.append("\\\"");
+                        case '\\' -> res.append("\\\\");
+                        case '\n' -> res.append("\\n");
+                        default -> res.append(c);
                     }
                 }
                 res.append('\"');

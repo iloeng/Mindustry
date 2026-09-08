@@ -56,21 +56,18 @@ public class LAssembler{
         return new LParser(text, privileged).parse();
     }
 
-    /** @return a variable by name.
-     * This may be a constant variable referring to a number or object. */
+    /**
+     * @return a variable by name. This may be a constant variable referring to a number or object.
+     * @param symbol the string literal, numeric literal, or variable name. Leading or trailing spaces are not allowed.
+     * */
     public LVar var(String symbol){
         LVar constVar = Vars.logicVars.get(symbol, privileged);
         if(constVar != null) return constVar;
 
-        symbol = symbol.trim();
-
         //string case
-        if(!symbol.isEmpty() && symbol.charAt(0) == '\"' && symbol.charAt(symbol.length() - 1) == '\"'){
-            return putConst("___" + symbol, symbol.substring(1, symbol.length() - 1).replace("\\n", "\n"));
+        if(symbol.length() > 1 && symbol.charAt(0) == '\"' && symbol.charAt(symbol.length() - 1) == '\"'){
+            return putConst("___" + symbol, symbol.substring(1, symbol.length() - 1));
         }
-
-        //remove spaces for non-strings
-        symbol = symbol.replace(' ', '_');
 
         //use a positive invalid number if number might be negative, else use a negative invalid number
         double value = parseDouble(symbol);
