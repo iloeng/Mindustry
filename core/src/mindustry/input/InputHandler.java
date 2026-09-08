@@ -321,12 +321,6 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         Seq<Unit> toAdd = queuedCommands.get(targetAsVec, Seq::new);
         boolean anyCommandedTarget = false;
 
-        //do not allow commanding into areas outside the map bounds
-        Tile tilePos = world.tileWorld(targetAsVec.x, targetAsVec.y);
-        if(tilePos != null && !tilePos.inMapArea()){
-            return;
-        }
-
         if(unitTarget != null || buildTarget != null){
             Events.fire(Trigger.unitCommandAttack);
         }else{
