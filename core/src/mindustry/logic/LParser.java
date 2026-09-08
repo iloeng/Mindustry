@@ -44,34 +44,16 @@ public class LParser{
     String string(){
         int from = pos;
         int utflen = 0;
-        //only allocated if an escape sequence is found
-        StringBuilder escaped = null;
 
         while(++pos < chars.length){
             char c = chars[pos];
 
-            //handle \n and \" escape sequences (also \\ so a literal backslash can be written)
-            if(c == '\\' && pos + 1 < chars.length){
-                char translated = switch(chars[pos + 1]){
-                    case 'n' -> '\n';
-                    case '"' -> '"';
-                    case '\\' -> '\\';
-                    default -> 0;
-                };
-
-                if(translated != 0){
-                    if(escaped == null){
-                        //copy everything read so far (without the surrounding quote)
-                        escaped = new StringBuilder();
-                        escaped.append(chars, from + 1, pos - from - 1);
-                    }
-
-                    escaped.append(translated);
-                    utflen += translated <= 0x7F ? 1 : translated <= 0x7FF ? 2 : 3;
-                    pos ++; //consume the escaped character too
-                    continue;
-                }
-                //not a recognized escape sequence; fall through and treat the backslash as a literal character (TODO: isn't this an invalid escape?)
+            //skip over \n, \" and \\ escape sequences
+            //this doesn't actually transform the sequences, as that would output invalid characters into Statement fields and break round-trip parsing
+            if(c == '\\' && pos + 1 < chars.length && (chars[pos + 1] == 'n' || chars[pos + 1] == '"' || chars[pos + 1] == '\\')){
+                utflen += 2;
+                pos ++; //consume the escaped character too
+                continue;
             }
 
             if(c == '\n'){
@@ -79,8 +61,6 @@ public class LParser{
             }else if(c == '"'){
                 break;
             }
-
-            if(escaped != null) escaped.append(c);
 
             // See ByteBufferOutput.writeUTF()
             utflen += c != 0 && c <= 0x7F ? 1 : c <= 0x7FF ? 2 : 3;
@@ -90,10 +70,6 @@ public class LParser{
         if(utflen > 65535) error("String value too long.");
 
         pos ++; //move past the closing quote
-
-        if(escaped != null){
-            return "\"" + escaped + "\"";
-        }
 
         return new String(chars, from, pos - from);
     }

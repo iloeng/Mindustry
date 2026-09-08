@@ -88,16 +88,26 @@ public abstract class LStatement{
         if(value.length() == 0){
             return "";
         }else if(value.length() == 1){
-            if(value.charAt(0) == '"' || value.charAt(0) == ';' || value.charAt(0) == ' '){
+            if(value.charAt(0) == '"' || value.charAt(0) == ';' || value.charAt(0) == ' ' ||
+            value.charAt(0) == '\n' || value.charAt(0) == '\t' || value.charAt(0) == '#'){
                 return "invalid";
             }
         }else{
             StringBuilder res = new StringBuilder(value.length());
             if(value.charAt(0) == '"' && value.charAt(value.length() - 1) == '"'){
                 res.append('\"');
-                //escape characters that would otherwise break out of the string or corrupt it
+                //escape characters that would otherwise break out of the string or corrupt it.
                 for(int i = 1; i < value.length() - 1; i++){
                     char c = value.charAt(i);
+                    //exception: allow escape sequences in strings: \n, \", \\
+                    if(c == '\\' && i + 1 < value.length() - 1){
+                        char next = value.charAt(i + 1);
+                        if(next == '"' || next == '\\' || next == 'n'){
+                            res.append(c).append(next);
+                            i ++; //consumed the escape target too
+                            continue;
+                        }
+                    }
                     switch(c){
                         case '"' -> res.append("\\\"");
                         case '\\' -> res.append("\\\\");
@@ -107,13 +117,14 @@ public abstract class LStatement{
                 }
                 res.append('\"');
             }else{
-                //otherwise, strip out semicolons, spaces and quotes
+                //otherwise, strip out/replace anything the tokenizer would treat as a delimiter or
+                //comment start for an unquoted token: semicolons, spaces, quotes, tabs, newlines and '#'
                 for(int i = 0; i < value.length(); i++){
                     char c = value.charAt(i);
                     res.append(switch(c){
                         case ';' -> 's';
                         case '"' -> '\'';
-                        case ' ' -> '_';
+                        case ' ', '\t', '\n', '#' -> '_';
                         default -> c;
                     });
                 }

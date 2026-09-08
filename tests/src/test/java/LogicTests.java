@@ -134,7 +134,13 @@ public class LogicTests{
         "unquoted values get semicolons/spaces/quotes replaced instead of escaped",
         "hello world;test\"quote",
         "hello_worldstest'quote"
-        )
+        ),
+        Arguments.of("a raw newline in an unquoted value gets neutralized like a space", "a\nb\nc", "a_b_c"),
+        Arguments.of("a raw tab in an unquoted value gets neutralized like a space", "a\tb", "a_b"),
+        Arguments.of("a raw '#' in an unquoted value gets neutralized so it can't start a comment", "a#b", "a_b"),
+        Arguments.of("a lone newline character is invalid on its own, same as a lone space", "\n", "invalid"),
+        Arguments.of("a lone tab character is invalid on its own, same as a lone space", "\t", "invalid"),
+        Arguments.of("a lone '#' character is invalid on its own, same as a lone space", "#", "invalid")
         );
     }
 
@@ -147,6 +153,10 @@ public class LogicTests{
 
         Object decoded = setFromValue("set result " + sanitized);
         assertEquals(expectedDecoded, decoded);
+
+        //make sure read/write roundtrips it
+        var statements = LAssembler.read("set result " + sanitized + "\n", true);
+        assertEquals("set result " + sanitized + "\n", LAssembler.write(statements));
     }
 
     static Stream<Arguments> sanitizeRoundTripCases(){
@@ -155,10 +165,40 @@ public class LogicTests{
         Arguments.of("bare embedded quote round-trips to a literal quote", "\"a\"b\"", "a\"b"),
         Arguments.of("literal backslash round-trips to a single backslash", "\"C:\\Users\"", "C:\\Users"),
         Arguments.of("real embedded newline round-trips to a real newline", "\"line1\nline2\"", "line1\nline2"),
+        Arguments.of("newline typed as escape turns into real backslash", "\"a\\nb\\nc\"", "a\nb\nc"),
+
+        //check intentional escapes
         Arguments.of(
         "bare quote + backslash + newline combined round-trip correctly together",
         "\"a\\b\"c\nd\"",
         "a\\b\"c\nd"
+        ),
+        Arguments.of(
+        "typing \\n by hand in a single-line field decodes to a real newline, not literal backslash+n",
+        "\"a\\nb\\nc\"",
+        "a\nb\nc"
+        ),
+        Arguments.of(
+        "typing \\\" by hand decodes to a literal embedded quote, not literal backslash+quote",
+        "\"say \\\"hi\\\"\"",
+        "say \"hi\""
+        ),
+        //this case is a little unintuitive (two backslashes = one backslash, but so is one with nothing after it?)
+        //I don't have any better ideas for handling this
+        Arguments.of(
+        "typing \\\\ by hand (two backslashes) decodes to a single literal backslash",
+        "\"a\\\\b\"",
+        "a\\b"
+        ),
+        Arguments.of(
+        "a lone backslash NOT forming a recognized escape still round-trips as itself, unaffected by the fix",
+        "\"C:\\Users\"",
+        "C:\\Users"
+        ),
+        Arguments.of(
+        "a trailing lone backslash right before the closing quote still round-trips as itself",
+        "\"end\\\"",
+        "end\\"
         )
         );
     }

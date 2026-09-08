@@ -1040,7 +1040,7 @@ public class LStatements{
             if(op != ConditionOp.always) st.field(t, comp0, set0);
 
             t.button(b -> {
-                b.add(st.selectTranslate(op.symbol));
+                b.add(selectTranslate(op.symbol));
                 b.clicked(() -> st.showSelect(b, ConditionOp.all, op, getter));
             }, Styles.logict, () -> {
             }).size(op == ConditionOp.always ? 80f : 48f, 40f).pad(4f).color(t.color);

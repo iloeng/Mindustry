@@ -66,7 +66,7 @@ public class LAssembler{
 
         //string case
         if(symbol.length() > 1 && symbol.charAt(0) == '\"' && symbol.charAt(symbol.length() - 1) == '\"'){
-            return putConst("___" + symbol, symbol.substring(1, symbol.length() - 1));
+            return putConst("___" + symbol, unescape(symbol.substring(1, symbol.length() - 1)));
         }
 
         //use a positive invalid number if number might be negative, else use a negative invalid number
@@ -79,6 +79,30 @@ public class LAssembler{
             //this creates a hidden const variable with the specified value
             return putConst("___" + value, value);
         }
+    }
+
+    /** Decodes \n, \" and \\ escape sequences in a string literal's contents (quotes already stripped). */
+    static String unescape(String s){
+        if(s.indexOf('\\') == -1) return s;
+
+        StringBuilder out = new StringBuilder(s.length());
+        for(int i = 0; i < s.length(); i++){
+            char c = s.charAt(i);
+            if(c == '\\' && i + 1 < s.length()){
+                char next = s.charAt(i + 1);
+                if(next == 'n'){
+                    out.append('\n');
+                    i ++;
+                    continue;
+                }else if(next == '"' || next == '\\'){
+                    out.append(next);
+                    i ++;
+                    continue;
+                }
+            }
+            out.append(c);
+        }
+        return out.toString();
     }
 
     double parseDouble(String symbol){
