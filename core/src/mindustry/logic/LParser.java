@@ -56,6 +56,17 @@ public class LParser{
                 continue;
             }
 
+            //uXXXX: validate 4 hex digits
+            if(c == '\\' && pos + 1 < chars.length && chars[pos + 1] == 'u'){
+                if(pos + 5 >= chars.length) error("Invalid \\u escape; expected 4 hex digits.");
+                for(int j = pos + 2; j <= pos + 5; j++){
+                    if(Character.digit(chars[j], 16) == -1) error("Invalid \\u escape; expected 4 hex digits.");
+                }
+                utflen += 3; //decoded char may take up to 3 bytes in modified UTF-8
+                pos += 5; //consume u and the 4 hex digits
+                continue;
+            }
+
             if(c == '\n'){
                 error("Missing closing quote \" before end of line.");
             }else if(c == '"'){

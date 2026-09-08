@@ -99,12 +99,16 @@ public abstract class LStatement{
                 //escape characters that would otherwise break out of the string or corrupt it.
                 for(int i = 1; i < value.length() - 1; i++){
                     char c = value.charAt(i);
-                    //exception: allow escape sequences in strings: \n, \", \\
+                    //exception: allow escape sequences in strings: \n, \", \\, uXXXX
                     if(c == '\\' && i + 1 < value.length() - 1){
                         char next = value.charAt(i + 1);
                         if(next == '"' || next == '\\' || next == 'n'){
                             res.append(c).append(next);
                             i ++; //consumed the escape target too
+                            continue;
+                        }else if(next == 'u' && i + 5 < value.length() - 1 && isHex(value, i + 2)){
+                            res.append(value, i, i + 6);
+                            i += 5; //consumed u and the 4 hex digits too
                             continue;
                         }
                     }
@@ -134,6 +138,14 @@ public abstract class LStatement{
         }
 
         return value;
+    }
+
+    /** True if the 4 characters at value[from..from+3] are all hex digits. */
+    private static boolean isHex(String value, int from){
+        for(int i = from; i < from + 4; i++){
+            if(Character.digit(value.charAt(i), 16) == -1) return false;
+        }
+        return true;
     }
 
     protected static boolean logicLocalization(){
